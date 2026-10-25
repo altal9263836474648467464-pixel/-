@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крафтер Номеров</title>
+    <!-- Подключаем скрипт Телеграма -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --panel-bg: #1e1e1e;
+            --rarity-common: #8e8e93;
+            --rarity-rare: #007aff;
+            --rarity-epic: #af52de;
+            --rarity-legendary: #ffcc00;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .header-panel {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            background: var(--panel-bg);
+            padding: 12px 15px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #rarity-badge {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            color: var(--rarity-common);
+        }
+
+        .car-plate {
+            background: #ffffff;
+            color: #000000;
+            border: 4px solid var(--rarity-common);
+            border-radius: 6px;
+            display: inline-flex;
+            font-weight: bold;
+            padding: 5px 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 15px rgba(142, 142, 147, 0.2);
+        }
+
+        .plate-main {
+            font-size: 42px;
+            letter-spacing: 2px;
+            padding-right: 12px;
+            border-right: 3px solid #000000;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            font-family: monospace, sans-serif;
+            min-width: 190px;
+            justify-content: center;
+        }
+
+        .blur-anim {
+            animation: blurEffect 0.1s infinite alternate;
+        }
+
+        @keyframes blurEffect {
+            from { filter: blur(0px); }
+            to { filter: blur(2px); }
+        }
+
+        .plate-region {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-left: 8px;
+            min-width: 45px;
+        }
+
+        .region-code {
+            font-size: 28px;
+            line-height: 1;
+            font-family: monospace, sans-serif;
+        }
+
+        .price-display {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #4cd964;
+        }
+
+        .controls-wrapper {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .spin-btn {
+            flex: 2;
+            background-color: #2481cc;
+            color: #ffffff;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+        }
+
+        .select-btn {
+            flex: 1;
+            background-color: var(--panel-bg);
+            color: #ffffff;
+            border: 2px solid #333;
+            padding: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .info-panel {
+            width: 100%;
+            max-width: 400px;
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .mode-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .mode-desc {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.4;
+        }
+
+        .flag {
+            width: 12px;
+            height: 8px;
+            background: linear-gradient(to bottom, #fff 33%, #0033a0 33%, #0033a0 66%, #da291c 66%);
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-panel">
+        <div class="stat-box">
+            <span class="stat-label">Уровень</span>
+            <span class="stat-value" id="user-level">1 LVL</span>
+        </div>
+        <div class="stat-box" style="text-align: right;">
+            <span class="stat-label">Баланс</span>
+            <span class="stat-value" id="user-balance">100 000 ₽</span>
+        </div>
+    </div>
+
+    <div id="rarity-badge">Обычный</div>
+    <div class="car-plate" id="plate-card">
+        <div class="plate-main" id="plate-text">А 777 АА</div>
+        <div class="plate-region">
+            <div class="region-code" id="plate-reg">777</div>
+            <div class="region-country">RUS <div class="flag"></div></div>
+        </div>
+    </div>
+    <div class="price-display" id="plate-price">Цена номера: 0 ₽</div>
+
+    <div class="controls-wrapper">
+        <button class="spin-btn" id="spin-trigger">Нажми чтобы крутить!</button>
+        <button class="select-btn" id="mode-trigger">Обычный<br><span style="font-size:11px; color:#4cd964;">1к ₽</span></button>
+    </div>
+
+    <div class="info-panel">
+        <div class="mode-title" id="info-title">Режим: Обычный</div>
+        <div class="mode-desc" id="info-text">"Обычный" может выпасть от Обычного до легендарного.</div>
+    </div>
+
+<script>
+    // Безопасная инициализация Телеграм SDK
+    let tg = null;
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+    }
+
+    let currentBalance = 100000;
+    let currentExp = 0;
+    let currentLevel = 1;
+    let currentModeIndex = 0; 
+    let isSpinning = false; 
+
+    const modes = [
+        { name: "Обычный", cost: 1000, desc: "\"Обычный\" может выпасть от Обычного до легендарного.", pool: ["common", "rare", "epic", "legendary"], weights: [70, 20, 8, 2] },
+        { name: "Редкий", cost: 8000, desc: "\"Редкий\" может выпасть от Редкого и до легендарного.", pool: ["rare", "epic", "legendary"], weights: [75, 20, 5] },
+        { name: "Эпический", cost: 12000, desc: "\"Эпический\" может выпасть от Эпического до легендарного.", pool: ["epic", "legendary"], weights: [85, 15] },
+        { name: "Легендарный", cost: 24000, desc: "\"Легендарный\" выпадает только Легендарный.", pool: ["legendary"], weights: [100] }
+    ];
+
+    const rarities = {
+        common: { name: "Обычный", color: "#8e8e93", exp: 10, shadow: "rgba(142, 142, 147, 0.3)" },
+        rare: { name: "Редкий", color: "#007aff", exp: 40, shadow: "rgba(0, 122, 255, 0.5)" },
+        epic: { name: "Эпический", color: "#af52de", exp: 100, shadow: "rgba(175, 82, 222, 0.6)" },
+        legendary: { name: "Легендарный", color: "#ffcc00", exp: 350, shadow: "rgba(255, 204, 0, 0.8)" }
+    };
+
+    const letters = ['А', 'В', 'Е', 'К', 'М', 'Н', 'О', 'Р', 'С', 'Т', 'У', 'Х'];
+
+    // Кнопка выбора кейса
+    document.getElementById('mode-trigger').addEventListener('click', function() {
+        if (isSpinning) return;
+        currentModeIndex = (currentModeIndex + 1) % modes.length;
+        let mode = modes[currentModeIndex];
+        
+        document.getElementById('mode-trigger').innerHTML = mode.name + '<br><span style="font-size:11px; color:#4cd964;">' + (mode.cost/1000) + 'к ₽</span>';
+        document.getElementById('info-title').innerText = "Режим: " + mode.name;
+        document.getElementById('info-text').innerText = mode.desc;
+
+        if (tg && tg.hapticFeedback) tg.hapticFeedback.impactOccurred('light');
+    });
+
+    function getRandomRarity(mode) {
+        let rand = Math.random() * 100;
+        let sum = 0;
+        for (let i = 0; i < mode.weights.length; i++) {
+            sum += mode.weights[i];
+            if (rand <= sum) return mode.pool[i];
+        }
+        return mode.pool[mode.pool.length - 1];
+    }
+
+    // Главная кнопка "КРУТИТЬ"
+    document.getElementById('spin-trigger').addEventListener('click', function() {
+        if (isSpinning) return;
+        let mode = modes[currentModeIndex];
+
+        if (currentBalance < mode.cost) {
+            if (tg) tg.showAlert("Недостаточно средств!");
+            else alert("Недостаточно средств!");
+            return;
+        }
+
+        isSpinning = true;
+        document.getElementById('spin-trigger').disabled = true;
+        document.getElementById('plate-text').classList.add('blur-anim');
+
+        currentBalance -= mode.cost;
+        document.getElementById('user-balance').innerText = currentBalance.toLocaleString('ru-RU') + " ₽";
+
+        let pickedRarityKey = getRandomRarity(mode);
+        let rarity = rarities[pickedRarityKey];
+        
+        let finalNum = "";
+        let finalPrice = Math.floor(Math.random() * 5000) + 500;
+
+        if (pickedRarityKey === "legendary") {
+            let d = ['7','1','9','5'][Math.floor(Math.random() * 4)];
+            finalNum = d + d + d;
+            finalPrice = Math.floor(Math.random() * 5000000) + 1500000;
+        } else if (pickedRarityKey === "epic") {
